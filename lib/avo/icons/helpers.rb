@@ -20,6 +20,13 @@ module Avo
 
       private
 
+      # Override inline_svg's placeholder to use our own css class.
+      # https://github.com/jamesmartin/inline_svg/blob/main/lib/inline_svg/action_view/helpers.rb#L61
+      def placeholder(filename)
+        css_class = "avo-missing-svg"
+        "<div class='#{css_class}' style='width: 1rem; height: 1rem; border: 1px solid #ef4444; border-radius: 0.25rem;' title='SVG file not found: #{filename}'><!-- SVG file not found: '#{ERB::Util.html_escape_once(filename)}' --></div>".html_safe
+      end
+
       # Taken from the original library
       # https://github.com/jamesmartin/inline_svg/blob/main/lib/inline_svg/action_view/helpers.rb#L76
       def with_asset_finder(asset_finder)
