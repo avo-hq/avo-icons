@@ -30,12 +30,12 @@ module Avo
           Rails.root.join("app", "assets", "svgs", @filename),
           Rails.root.join(@filename),
           Avo::Icons.root.join("assets", "svgs", @filename),
+          Avo::Icons.root.join("assets", "svgs", "tabler", "outline", @filename),
+          Avo::Icons.root.join("assets", "svgs", "tabler", "filled", @filename),
           Avo::Icons.root.join("assets", "svgs", "heroicons", "outline", @filename),
           Avo::Icons.root.join("assets", "svgs", "heroicons", "solid", @filename),
           Avo::Icons.root.join("assets", "svgs", "heroicons", "mini", @filename),
           Avo::Icons.root.join("assets", "svgs", "heroicons", "micro", @filename),
-          Avo::Icons.root.join("assets", "svgs", "tabler", "outline", @filename),
-          Avo::Icons.root.join("assets", "svgs", "tabler", "filled", @filename),
           # Add all paths from Rails including engines
           *Rails.application.config.assets&.paths&.map { |path| File.join(path, @filename) }
         ]
