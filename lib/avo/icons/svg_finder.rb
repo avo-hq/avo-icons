@@ -37,7 +37,7 @@ module Avo
           Avo::Icons.root.join("assets", "svgs", "heroicons", "mini", @filename),
           Avo::Icons.root.join("assets", "svgs", "heroicons", "micro", @filename),
           # Add all paths from Rails including engines
-          *Rails.application.config.assets&.paths&.map { |path| File.join(path, @filename) }
+          *(Rails.application.config.respond_to?(:assets) ? Rails.application.config.assets&.paths&.map { |path| File.join(path, @filename) } : nil)
         ]
 
         # Add custom paths from configuration
@@ -57,11 +57,11 @@ module Avo
         if defined?(Propshaft)
           asset_path = ::Rails.application.assets.load_path.find(@filename)
           asset_path&.path
-        elsif ::Rails.application.config.assets.compile
+        elsif Rails.application.config.respond_to?(:assets) && ::Rails.application.config.assets.compile
           # Grab the asset from the compiled asset manifest
           asset = ::Rails.application.assets[@filename]
           Pathname.new(asset.filename) if asset.present?
-        else
+        elsif Rails.application.respond_to?(:assets_manifest)
           # Grab the asset from the manifest
           manifest = ::Rails.application.assets_manifest
           asset_path = manifest.assets[@filename]
@@ -73,4 +73,3 @@ module Avo
     end
   end
 end
-
