@@ -12,7 +12,7 @@ module Avo
       attr_accessor :cached_svgs
 
       def root
-        Pathname.new File.expand_path('..', __dir__)
+        Pathname.new File.expand_path("..", __dir__)
       end
 
       def configuration
