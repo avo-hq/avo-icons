@@ -5,7 +5,6 @@ gemspec
 
 # The dummy app under test/ boots a full Rails app (rails/all + ActiveRecord
 # for fixtures/migrations), so the test harness needs the whole framework.
-# The gem's own runtime dep is just railties (see avo-icons.gemspec).
 gem "rails"
 
 gem "puma"
