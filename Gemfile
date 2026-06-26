@@ -3,6 +3,10 @@ source "https://rubygems.org"
 # Specify your gem's dependencies in avo-icons.gemspec.
 gemspec
 
+# Rails is only needed to boot the dummy app in tests; the gem itself
+# stays framework-version-agnostic (see avo-icons.gemspec).
+gem "rails"
+
 gem "puma"
 
 gem "sqlite3"
