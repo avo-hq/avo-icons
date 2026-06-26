@@ -40,7 +40,8 @@ jobs:
             echo
             echo "SVG changes (added / removed):"
             echo '```'
-            git diff --stat -- lib/assets/svgs || true
+            git add -A lib/assets/svgs
+            git diff --cached --stat -- lib/assets/svgs || true
             echo '```'
           } > /tmp/pr-body.md
           echo "added=$(git status --porcelain lib/assets/svgs | grep -c '^??' || true)" >> "$GITHUB_OUTPUT"
