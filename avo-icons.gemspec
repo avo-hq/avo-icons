@@ -16,4 +16,5 @@ Gem::Specification.new do |spec|
   end
 
   spec.add_dependency "inline_svg"
+  spec.add_dependency "railties" # the gem registers a Rails::Railtie
 end
