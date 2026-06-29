@@ -47,6 +47,7 @@ jobs:
           echo "added=$(git status --porcelain lib/assets/svgs | grep -c '^??' || true)" >> "$GITHUB_OUTPUT"
 
       - name: Create pull request
+        id: cpr
         uses: peter-evans/create-pull-request@v8
         with:
           branch: chore/update-icons
@@ -57,3 +58,13 @@ jobs:
             lib/assets/svgs
             package.json
             yarn.lock
+
+      - name: Report result
+        run: |
+          if [ -n "${{ steps.cpr.outputs.pull-request-number }}" ]; then
+            echo "### 🎨 Icon packs updated" >> "$GITHUB_STEP_SUMMARY"
+            echo "${{ steps.cpr.outputs.pull-request-operation }} PR [#${{ steps.cpr.outputs.pull-request-number }}](${{ steps.cpr.outputs.pull-request-url }})" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### ✅ No new icons" >> "$GITHUB_STEP_SUMMARY"
+            echo "Icon packs are already up to date — nothing to PR." >> "$GITHUB_STEP_SUMMARY"
+          fi
