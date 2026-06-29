@@ -14,12 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Bump icon packages to latest
         run: yarn add @tabler/icons@latest heroicons@latest
@@ -47,7 +47,7 @@ jobs:
           echo "added=$(git status --porcelain lib/assets/svgs | grep -c '^??' || true)" >> "$GITHUB_OUTPUT"
 
       - name: Create pull request
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8
         with:
           branch: chore/update-icons
           title: "chore: update icon packs"
