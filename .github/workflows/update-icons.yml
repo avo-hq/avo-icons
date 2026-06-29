@@ -1,0 +1,59 @@
+name: Update icon packs
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # every Monday 06:00 UTC
+  workflow_dispatch: # allow manual runs
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Bump icon packages to latest
+        run: yarn add @tabler/icons@latest heroicons@latest
+
+      - name: Export icons
+        run: yarn export
+
+      - name: Summarize changes
+        id: summary
+        run: |
+          {
+            echo "Automated weekly refresh of the bundled icon packs."
+            echo
+            echo "Package versions:"
+            echo '```'
+            node -p "const p=require('./package.json'); ['@tabler/icons','heroicons'].map(k=>k+': '+p.dependencies[k]).join('\n')"
+            echo '```'
+            echo
+            echo "SVG changes (added / removed):"
+            echo '```'
+            git add -A lib/assets/svgs
+            git diff --cached --stat -- lib/assets/svgs || true
+            echo '```'
+          } > /tmp/pr-body.md
+          echo "added=$(git status --porcelain lib/assets/svgs | grep -c '^??' || true)" >> "$GITHUB_OUTPUT"
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: chore/update-icons
+          title: "chore: update icon packs"
+          body-path: /tmp/pr-body.md
+          commit-message: "chore: update icon packs via yarn export"
+          add-paths: |
+            lib/assets/svgs
+            package.json
+            yarn.lock
