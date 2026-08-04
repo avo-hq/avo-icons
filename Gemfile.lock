@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    avo-icons (0.1.6)
+    avo-icons (0.2.0)
       inline_svg
 
 GEM
@@ -120,6 +120,7 @@ GEM
       net-smtp
     marcel (1.2.1)
     mini_mime (1.1.5)
+    mini_portile2 (2.8.9)
     minitest (6.0.6)
       drb (~> 2.0)
       prism (~> 1.5)
@@ -230,6 +231,8 @@ GEM
       rubocop-rails (>= 2.30)
     ruby-progressbar (1.13.0)
     securerandom (0.4.1)
+    sqlite3 (2.7.4)
+      mini_portile2 (~> 2.8.0)
     sqlite3 (2.7.4-arm64-darwin)
     sqlite3 (2.7.4-x86_64-linux-gnu)
     thor (1.5.0)
