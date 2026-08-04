@@ -134,6 +134,9 @@ GEM
     net-smtp (0.5.1)
       net-protocol
     nio4r (2.7.5)
+    nokogiri (1.19.4)
+      mini_portile2 (~> 2.8.2)
+      racc (~> 1.4)
     nokogiri (1.19.4-arm64-darwin)
       racc (~> 1.4)
     nokogiri (1.19.4-x86_64-linux-gnu)
@@ -253,7 +256,12 @@ GEM
 
 PLATFORMS
   arm64-darwin
+  arm64-darwin-23
+  arm64-darwin-24
+  arm64-darwin-25
+  ruby
   x86_64-linux
+  x86_64-linux-gnu
 
 DEPENDENCIES
   avo-icons!
