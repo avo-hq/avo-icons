@@ -32,6 +32,15 @@ class Avo::Icons::HelpersTest < ActiveSupport::TestCase
     Thread.current[:inline_svg_asset_finder] = nil
   end
 
+  # HostView hard-codes the include order, so it cannot catch a flip in the real
+  # one. Everything here depends on Avo's helpers shadowing inline_svg's.
+  test "Avo's helpers shadow inline_svg's in the booted ActionView::Base" do
+    ancestors = ActionView::Base.ancestors
+
+    assert_operator ancestors.index(Avo::Icons::Helpers), :<, ancestors.index(InlineSvg::ActionView::Helpers)
+    assert_equal Avo::Icons::Helpers, ActionView::Base.instance_method(:placeholder).owner
+  end
+
   test "host-app inline_svg renders inline_svg's silent placeholder for missing files" do
     output = HostView.new.inline_svg("does-not-exist.svg")
 
