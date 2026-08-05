@@ -28,8 +28,9 @@ module Avo
         return avo_missing_svg_placeholder(filename) if Thread.current[:inline_svg_asset_finder] == Avo::Icons::SvgFinder
         return super if defined?(super)
 
-        # Parity with inline_svg's silent placeholder for direct calls outside
-        # a full ActionView helper chain.
+        # Minimal silent placeholder for direct calls outside a full ActionView
+        # helper chain. Mirrors inline_svg's default shape only — it does not
+        # consult svg_not_found_css_class or add the extension hint.
         escaped_filename = ERB::Util.html_escape_once(filename.to_s)
         "<svg><!-- SVG file not found: '#{escaped_filename}' --></svg>".html_safe
       end
