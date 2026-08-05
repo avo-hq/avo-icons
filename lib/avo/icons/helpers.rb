@@ -42,14 +42,18 @@ module Avo
         "<div data-tippy='tooltip' class='#{css_class}' style='width: 2rem; height: 2rem; color: #ef4444;' title='SVG file not found: #{escaped_filename}'><!-- SVG file not found: '#{escaped_filename}' -->#{missing_icon}</div>".html_safe
       end
 
-      # Taken from the original library
+      # Adapted from the original library, with an ensure so the Avo finder
+      # marker (which #placeholder keys off) cannot outlive the call — even
+      # when the block raises — and any pre-existing finder is restored
+      # instead of clobbered.
       # https://github.com/jamesmartin/inline_svg/blob/main/lib/inline_svg/action_view/helpers.rb#L76
       def with_asset_finder(asset_finder)
+        previous_asset_finder = Thread.current[:inline_svg_asset_finder]
         Thread.current[:inline_svg_asset_finder] = asset_finder
-        output = yield
-        Thread.current[:inline_svg_asset_finder] = nil
 
-        output
+        yield
+      ensure
+        Thread.current[:inline_svg_asset_finder] = previous_asset_finder
       end
     end
   end

@@ -84,6 +84,29 @@ class Avo::Icons::HelpersTest < ActiveSupport::TestCase
     refute_includes output, "onmouseover='alert(1)"
   end
 
+  test "svg clears the asset finder thread-local when rendering raises" do
+    view = HostView.new
+    # #svg calls inline_svg inside with_asset_finder, so raising here surfaces
+    # the exception while the Avo finder marker is set.
+    def view.inline_svg(*)
+      raise "boom"
+    end
+
+    error = assert_raises(RuntimeError) { view.svg("anything") }
+
+    assert_equal "boom", error.message
+    assert_nil Thread.current[:inline_svg_asset_finder]
+  end
+
+  test "svg restores a pre-existing asset finder thread-local instead of clobbering it" do
+    sentinel = Object.new
+    Thread.current[:inline_svg_asset_finder] = sentinel
+
+    HostView.new.svg("tabler/outline/ice-cream-off")
+
+    assert_same sentinel, Thread.current[:inline_svg_asset_finder]
+  end
+
   test "svg renders a bundled icon without the missing icon wrapper" do
     output = HostView.new.svg("tabler/outline/ice-cream-off")
 
