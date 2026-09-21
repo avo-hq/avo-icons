@@ -7,7 +7,7 @@
     "export:tabler": "node scripts/export-tabler-icons.js"
   },
   "dependencies": {
-    "@tabler/icons": "^3.46.0",
+    "@tabler/icons": "^3.47.0",
     "heroicons": "^2.2.0"
   }
 }
