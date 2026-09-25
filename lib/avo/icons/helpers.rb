@@ -13,12 +13,21 @@ module Avo
 
         file_name = "#{file_name}.svg" unless file_name.end_with? ".svg"
 
+        # inline_svg reads the file and runs a Nokogiri transform on every call, so reuse the markup
+        # once code stops reloading. `aria: true` makes inline_svg generate random ids, which must differ per render.
+        return render_svg(file_name, **args) if !Rails.application.config.cache_classes || args[:aria]
+
+        # A copy, so a caller appending to the result cannot change the cached markup.
+        Avo::Icons.fetch_rendered_svg([ file_name, args ]) { render_svg(file_name, **args) }.dup
+      end
+
+      private
+
+      def render_svg(file_name, **args)
         with_asset_finder(Avo::Icons::SvgFinder) do
           inline_svg file_name, **args
         end
       end
-
-      private
 
       # Override inline_svg's placeholder, but only for lookups made through
       # our #svg helper (detected via the asset finder thread-local). Host app
