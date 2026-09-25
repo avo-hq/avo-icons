@@ -21,6 +21,7 @@ class Avo::Icons::HelpersTest < ActiveSupport::TestCase
 
   setup do
     Avo::Icons.cached_svgs = {}
+    Avo::Icons.rendered_svgs.clear
     Avo::Icons.reset_configuration!
     Thread.current[:inline_svg_asset_finder] = nil
     InlineSvg.configure { |config| config.asset_finder = NotFoundAssetFinder }
@@ -123,5 +124,59 @@ class Avo::Icons::HelpersTest < ActiveSupport::TestCase
     assert_includes output, "icon-tabler-ice-cream-off"
     refute_includes output, "avo-missing-svg"
     refute_includes output, "<div"
+  end
+
+  test "svg reuses the rendered markup while classes are cached" do
+    Dir.mktmpdir do |svg_directory|
+      Avo::Icons.configure { |config| config.add_path(svg_directory) }
+      File.write(File.join(svg_directory, "cached.svg"), '<svg><path d="M1 1"/></svg>')
+      first_output = HostView.new.svg("cached", class: "h-4")
+
+      File.write(File.join(svg_directory, "cached.svg"), '<svg><path d="M2 2"/></svg>')
+
+      assert_includes first_output, 'd="M1 1"'
+      assert_equal first_output, HostView.new.svg("cached", class: "h-4")
+      assert_includes HostView.new.svg("cached", class: "h-6"), 'd="M2 2"'
+    end
+  end
+
+  test "svg re-reads the file on every call while code reloads" do
+    original_cache_classes = Rails.application.config.cache_classes
+    Dir.mktmpdir do |svg_directory|
+      Avo::Icons.configure { |config| config.add_path(svg_directory) }
+      File.write(File.join(svg_directory, "edited.svg"), '<svg><path d="M1 1"/></svg>')
+
+      Rails.application.config.cache_classes = false
+      HostView.new.svg("edited")
+      File.write(File.join(svg_directory, "edited.svg"), '<svg><path d="M2 2"/></svg>')
+
+      assert_includes HostView.new.svg("edited"), 'd="M2 2"'
+    end
+  ensure
+    Rails.application.config.cache_classes = original_cache_classes
+  end
+
+  test "svg generates fresh aria ids on every call" do
+    Dir.mktmpdir do |svg_directory|
+      Avo::Icons.configure { |config| config.add_path(svg_directory) }
+      File.write(File.join(svg_directory, "titled.svg"), "<svg><title>Search</title></svg>")
+
+      refute_equal HostView.new.svg("titled", aria: true), HostView.new.svg("titled", aria: true)
+    end
+  end
+
+  test "svg returns a copy the caller can append to" do
+    output = HostView.new.svg("tabler/outline/ice-cream-off")
+    output << "<span>appended</span>".html_safe
+
+    refute_includes HostView.new.svg("tabler/outline/ice-cream-off"), "appended"
+  end
+
+  test "svg empties the markup cache once it reaches its limit" do
+    Avo::Icons::RENDERED_SVGS_LIMIT.times { |index| Avo::Icons.rendered_svgs[index] = "<svg></svg>" }
+
+    HostView.new.svg("tabler/outline/ice-cream-off")
+
+    assert_equal 1, Avo::Icons.rendered_svgs.size
   end
 end
