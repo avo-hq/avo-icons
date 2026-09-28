@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@tabler/icons@^3.47.0":
-  version "3.47.0"
-  resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-3.47.0.tgz#a77de6f7711551e7bfabf9995caf9a7200ba6be1"
-  integrity sha512-aCbSemVrGvSA3w0sJi8mka6QrnQCN8wCD1jKNXXIR/h6Q4ffov/yFPyzjTULDM8ETtK4DABUZhWdYlygqy3npA==
+"@tabler/icons@^3.48.0":
+  version "3.48.0"
+  resolved "https://registry.yarnpkg.com/@tabler/icons/-/icons-3.48.0.tgz#08ad2b8c328ef5115b10ea306a52b6d9271f7b32"
+  integrity sha512-lQk06gVHNVBnJp0UOgtth54mcZBJM7rdYKsAxKOProj1bbSAx+/xiuOWfHlyvgdL3M+Y+I0HINrjHa3ygp8eXQ==
 
 heroicons@^2.2.0:
   version "2.2.0"
