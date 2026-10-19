@@ -8,6 +8,14 @@ class Avo::Icons::HelpersTest < ActiveSupport::TestCase
     include Avo::Icons::Helpers
   end
 
+  # Jumpstart Pro ships a public `render_svg(name, options)` in ApplicationHelper,
+  # which the host app includes after the Railtie helpers.
+  class JumpstartHostView < HostView
+    def render_svg(name, options = {})
+      inline_svg_tag("#{name}.svg", options)
+    end
+  end
+
   # Stands in for a host app's configured asset finder. The dummy app has no
   # asset pipeline, so inline_svg's default StaticAssetFinder raises before
   # the missing-file placeholder is ever reached.
@@ -124,6 +132,13 @@ class Avo::Icons::HelpersTest < ActiveSupport::TestCase
     assert_includes output, "icon-tabler-ice-cream-off"
     refute_includes output, "avo-missing-svg"
     refute_includes output, "<div"
+  end
+
+  test "svg renders through a host helper named render_svg" do
+    output = JumpstartHostView.new.svg("tabler/outline/ice-cream-off")
+
+    assert_includes output, "icon-tabler-ice-cream-off"
+    refute_includes output, "SVG file not found"
   end
 
   test "svg reuses the rendered markup while classes are cached" do
