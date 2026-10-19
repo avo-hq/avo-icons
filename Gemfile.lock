@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    avo-icons (0.2.3)
+    avo-icons (0.2.4)
       inline_svg
 
 GEM
