@@ -61,6 +61,8 @@ jobs:
     needs: tag
     if: needs.tag.outputs.version != ''
     runs-on: ubuntu-latest
+    # rubygems.org accepts only tokens from this environment, and the environment admits only main.
+    environment: release
     permissions:
       contents: read
       id-token: write
