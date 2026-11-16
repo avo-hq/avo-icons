@@ -1,0 +1,26 @@
+#!/usr/bin/env ruby
+# Prints the version that releases the changes since the last tag, or nothing when no shipped file changed.
+# A removed or renamed icon is major: a host still calling it gets the "SVG file not found" placeholder.
+
+def git(*args)
+  output = IO.popen([ "git", *args ], &:read)
+  abort "git #{args.join(" ")} failed" unless $?.success?
+  output
+end
+
+last_tag = git("describe", "--tags", "--abbrev=0", "--match", "v*").strip
+major, minor, patch = last_tag.delete_prefix("v").split(".").map(&:to_i)
+
+# The gem's code and icons plus its gemspec: a README or Rakefile edit is not worth a release.
+# --no-renames turns a renamed icon into a removal plus an addition.
+changes = git("diff", "--name-status", "--no-renames", last_tag, "HEAD", "--", "app", "config", "db", "lib", "avo-icons.gemspec")
+  .lines.map(&:split)
+icon_changes = changes.filter_map { |status, path| status if path.end_with?(".svg") }
+
+if icon_changes.include?("D")
+  puts "#{major + 1}.0.0"
+elsif icon_changes.include?("A")
+  puts "#{major}.#{minor + 1}.0"
+elsif changes.any?
+  puts "#{major}.#{minor}.#{patch + 1}"
+end

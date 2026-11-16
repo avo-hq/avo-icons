@@ -1,0 +1,84 @@
+name: Release
+
+# bin/next_version picks major, minor, patch or no release from what the green push changed.
+on:
+  workflow_run:
+    workflows: [ CI ]
+    types: [ completed ]
+    branches: [ main ]
+
+concurrency:
+  group: release
+
+jobs:
+  tag:
+    # A fork PR from a branch named main passes the branches filter, so only pushes count.
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.next.outputs.version }}
+    steps:
+      - name: Checkout the commit CI passed, with tags
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.4
+
+      - name: Pick the next version
+        id: next
+        run: |
+          version=$(bin/next_version)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      # A main that moved since CI ran rejects the push. The newer commit's own run then releases both.
+      - name: Bump, commit and tag
+        if: steps.next.outputs.version != ''
+        env:
+          VERSION: ${{ steps.next.outputs.version }}
+        run: |
+          sed -i "s/VERSION = \".*\"/VERSION = \"$VERSION\"/" lib/avo/icons/version.rb
+          sed -i "s/^    avo-icons (.*)$/    avo-icons ($VERSION)/" Gemfile.lock
+          grep -qF "VERSION = \"$VERSION\"" lib/avo/icons/version.rb
+          grep -qF "    avo-icons ($VERSION)" Gemfile.lock
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit --all --message "Bump avo-icons to v$VERSION"
+          git tag --annotate "v$VERSION" --message "Bump avo-icons to v$VERSION"
+          git push --atomic origin HEAD:main "v$VERSION"
+
+  # Its own job so a failed push to rubygems.org can be re-run alone: a re-run tag job finds nothing new since the tag.
+  publish:
+    needs: tag
+    if: needs.tag.outputs.version != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      VERSION: ${{ needs.tag.outputs.version }}
+    steps:
+      - name: Checkout the release tag
+        uses: actions/checkout@v7
+        with:
+          ref: v${{ needs.tag.outputs.version }}
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.4
+
+      # Trusted publishing: rubygems.org trusts this workflow file, so no API key is stored anywhere.
+      - name: Configure RubyGems credentials
+        uses: rubygems/configure-rubygems-credentials@dc5a8d8553e6ee01fc26761a49e99e733d17954a # v2.1.0
+
+      - name: Build and push the gem
+        run: |
+          gem build avo-icons.gemspec
+          gem push "avo-icons-$VERSION.gem"
