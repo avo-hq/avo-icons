@@ -19,15 +19,16 @@ jobs:
       contents: write
     outputs:
       version: ${{ steps.next.outputs.version }}
+      sha: ${{ steps.bump.outputs.sha }}
     steps:
       - name: Checkout the commit CI passed, with tags
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
       - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1.338.0
         with:
           ruby-version: 3.4
 
@@ -39,6 +40,7 @@ jobs:
 
       # A main that moved since CI ran rejects the push. The newer commit's own run then releases both.
       - name: Bump, commit and tag
+        id: bump
         if: steps.next.outputs.version != ''
         env:
           VERSION: ${{ steps.next.outputs.version }}
@@ -52,6 +54,7 @@ jobs:
           git commit --all --message "Bump avo-icons to v$VERSION"
           git tag --annotate "v$VERSION" --message "Bump avo-icons to v$VERSION"
           git push --atomic origin HEAD:main "v$VERSION"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
   # Its own job so a failed push to rubygems.org can be re-run alone: a re-run tag job finds nothing new since the tag.
   publish:
@@ -64,21 +67,24 @@ jobs:
     env:
       VERSION: ${{ needs.tag.outputs.version }}
     steps:
-      - name: Checkout the release tag
-        uses: actions/checkout@v7
+      # The commit, not the tag: a tag moved after the tag job must not change what gets built.
+      - name: Checkout the tagged commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: v${{ needs.tag.outputs.version }}
+          ref: ${{ needs.tag.outputs.sha }}
 
       - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1.338.0
         with:
           ruby-version: 3.4
+
+      # Built before the credentials exist, so the gemspec's Ruby never runs beside the push key.
+      - name: Build the gem
+        run: gem build avo-icons.gemspec
 
       # Trusted publishing: rubygems.org trusts this workflow file, so no API key is stored anywhere.
       - name: Configure RubyGems credentials
         uses: rubygems/configure-rubygems-credentials@dc5a8d8553e6ee01fc26761a49e99e733d17954a # v2.1.0
 
-      - name: Build and push the gem
-        run: |
-          gem build avo-icons.gemspec
-          gem push "avo-icons-$VERSION.gem"
+      - name: Push the gem
+        run: gem push "avo-icons-$VERSION.gem"

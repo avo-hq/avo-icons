@@ -13,8 +13,8 @@ major, minor, patch = last_tag.delete_prefix("v").split(".").map(&:to_i)
 
 # The gem's code and icons plus its gemspec: a README or Rakefile edit is not worth a release.
 # --no-renames turns a renamed icon into a removal plus an addition.
-changes = git("diff", "--name-status", "--no-renames", last_tag, "HEAD", "--", "app", "config", "db", "lib", "avo-icons.gemspec")
-  .lines.map(&:split)
+changes = git("diff", "--name-status", "-z", "--no-renames", last_tag, "HEAD", "--", "app", "config", "db", "lib", "avo-icons.gemspec")
+  .split("\0").each_slice(2).to_a
 icon_changes = changes.filter_map { |status, path| status if path.end_with?(".svg") }
 
 if icon_changes.include?("D")
