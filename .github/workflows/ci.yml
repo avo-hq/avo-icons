@@ -5,6 +5,10 @@ on:
   push:
     branches: [ main ]
 
+# A green run on main releases the gem, so nothing it runs may write to the repository.
+permissions:
+  contents: read
+
 jobs:
   lint:
     runs-on: ubuntu-latest
